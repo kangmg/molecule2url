@@ -16,21 +16,67 @@
   </tr>
 </table>
 
+
 ## Usage
 
-### Adding Molecules
-1. Place your `.xyz` files (single or multi-frame) into the `molecules` folder.
-2. The **comment line** (the second line of the `.xyz` file) of the first frame will be automatically used as the description in the list view.
-3. Commit and push your changes to GitHub.
-
-## Deployment (How to host your own)
+### 1. Deployment (How to host your own)
 You can easily host your own instance of this viewer using GitHub Pages.
 
-1. **Fork** this repository to your own GitHub account.
-2. Go to your repository's **Settings**.
-3. Navigate to **Pages** in the sidebar.
-4. Under **Build and deployment**, set the **Source** to `Deploy from a branch`.
-5. Select `main` (or `master`) as the branch and `/ (root)` as the folder.
-6. Click **Save**.
+<ol>
+  <li>
+    <b>Fork the Repository</b>
+    <br/>
+    Start by forking <code>github.com/kangmg/molecule2url</code> to your own GitHub account.
+    <div align="center">
+      <img src="asset/1.png" width="60%" style="margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;" />
+    </div>
+  </li>
+  <br/>
+  <li>
+    <b>Configure Deployment Source</b>
+    <br/>
+    Navigate to <i>Settings > Pages > Build and deployment</i> and change the <b>Source</b> to <b>GitHub Actions</b>.
+    <div align="center">
+      <img src="asset/2.png" width="60%" style="margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;" />
+    </div>
+  </li>
+  <br/>
+  <li>
+    <b>Enable Workflows</b>
+    <br/>
+    Go to the <b>Actions</b> tab. Click the green button labeled "<b>I understand my workflows, go ahead and enable them</b>".
+    <div align="center">
+      <img src="asset/3.png" width="60%" style="margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;" />
+    </div>
+  </li>
+  <br/>
+  <li>
+    <b>Trigger Deployment</b>
+    <br/>
+    The site deploys automatically on every push. To start, upload or remove the xyz files in <code>/molecules/*.xyz</code>.
+    <div align="center">
+      <img src="asset/4.png" width="60%" style="margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;" />
+    </div>
+  </li>
+  <br/>
+  <li>
+    <b>Display Deployment URL</b>
+    <br/>
+    Mark the checkbox. This makes your live URL visible on the repository homepage.
+    <div align="center">
+      <img src="asset/5.png" width="60%" style="margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;" />
+    </div>
+  </li>
+  <br/>
+  <li>
+    <b>Done!</b>
+    <br/>
+    Your personal molecule viewer is now live and ready to share. (<code>https://&lt;your-username&gt;.github.io/molecule2url/</code>)
+  </li>
+</ol>
 
-Your viewer will be live at `https://<your-username>.github.io/molecule2url/` in a few minutes!
+### 2. Adding Molecules
+Upload your `.xyz` files (single or multi-frame) into the `molecules` folder.
+
+
+> The **comment line** (2nd line of the file) will be automatically used as the description.
