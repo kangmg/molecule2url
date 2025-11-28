@@ -71,7 +71,9 @@ You can easily host your own instance of this viewer using GitHub Pages.
   <li>
     <b>Done!</b>
     <br/>
-    Your personal molecule viewer is now live and ready to share. (<code>https://&lt;your-username&gt;.github.io/molecule2url/</code>)
+    Your personal molecule viewer is now live and ready to share. 
+    <br/>
+    (<code>https://&lt;your-username&gt;.github.io/molecule2url/</code>)
   </li>
 </ol>
 
