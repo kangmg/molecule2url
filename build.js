@@ -2,30 +2,22 @@ const fs = require('fs');
 const path = require('path');
 
 const MOLECULES_DIR = path.join(__dirname, 'molecules');
-const VIEWER_TEMPLATE = path.join(__dirname, 'viewer.html');
-const OUTPUT_DIR = __dirname; // Root directory for GitHub Pages
+const OUTPUT_DIR = __dirname;
 
-// Ensure molecules directory exists
 if (!fs.existsSync(MOLECULES_DIR)) {
     console.error('Molecules directory not found!');
     process.exit(1);
 }
 
-// Read viewer template
-let viewerHtml = fs.readFileSync(VIEWER_TEMPLATE, 'utf8');
-
-// Extract comment from XYZ file (2nd line)
 function extractComment(filePath) {
     try {
         const lines = fs.readFileSync(filePath, 'utf8').split('\n');
         return lines.length >= 2 ? lines[1].trim() : '';
     } catch (err) {
-        console.error(`Error reading ${filePath}:`, err.message);
         return '';
     }
 }
 
-// Recursively scan molecules directory
 function getMoleculesRecursive(dir, basePath = '') {
     const molecules = [];
     const entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -46,7 +38,6 @@ function getMoleculesRecursive(dir, basePath = '') {
     return molecules;
 }
 
-// Build hierarchical structure from flat molecule list
 function buildHierarchy(molecules) {
     const root = {};
 
@@ -54,7 +45,6 @@ function buildHierarchy(molecules) {
         const parts = mol.name.split('/');
         let current = root;
 
-        // Navigate/create folder structure
         for (let i = 0; i < parts.length - 1; i++) {
             const folder = parts[i];
             if (!current[folder]) {
@@ -63,7 +53,6 @@ function buildHierarchy(molecules) {
             current = current[folder]._children;
         }
 
-        // Add file at leaf
         const fileName = parts[parts.length - 1];
         current[fileName] = {
             _type: 'file',
@@ -76,17 +65,14 @@ function buildHierarchy(molecules) {
     return root;
 }
 
-// Get all .xyz files recursively
 const molecules = getMoleculesRecursive(MOLECULES_DIR);
 const hierarchy = buildHierarchy(molecules);
 
 console.log(`Found ${molecules.length} molecules:`, molecules.map(m => m.name));
 
-// Render tree HTML recursively
 function renderTree(node, depth = 0) {
     let html = '';
     const entries = Object.entries(node).sort((a, b) => {
-        // Folders first, then files
         const aIsFolder = a[1]._type === 'folder';
         const bIsFolder = b[1]._type === 'folder';
         if (aIsFolder && !bIsFolder) return -1;
@@ -94,7 +80,6 @@ function renderTree(node, depth = 0) {
         return a[0].localeCompare(b[0]);
     });
 
-    // Indentation spacer
     const indent = `<span class="tree-indent" style="width: ${depth * 24}px"></span>`;
 
     for (const [key, value] of entries) {
@@ -104,9 +89,7 @@ function renderTree(node, depth = 0) {
                     <div class="tree-row" onclick="toggleFolder(this)">
                         ${indent}
                         <div class="toggle-arrow">
-                            <svg viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M8 5v14l11-7z"/>
-                            </svg>
+                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
                         </div>
                         <div class="row-icon">
                             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
@@ -118,13 +101,12 @@ function renderTree(node, depth = 0) {
                     <div class="folder-content">
                         ${renderTree(value._children, depth + 1)}
                     </div>
-                </div>
-            `;
+                </div>`;
         } else if (value._type === 'file') {
             html += `
                 <div class="tree-row" onclick="selectMolecule('${value.name}')">
                     ${indent}
-                    <div class="toggle-arrow"></div> <!-- Spacer for alignment -->
+                    <div class="toggle-arrow"></div>
                     <div class="row-icon">
                         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -136,8 +118,7 @@ function renderTree(node, depth = 0) {
                     </div>
                     <span class="row-name">${value._name}</span>
                     ${value.comment ? `<span class="row-comment">${value.comment}</span>` : ''}
-                </div>
-            `;
+                </div>`;
         }
     }
 
@@ -146,232 +127,184 @@ function renderTree(node, depth = 0) {
 
 const treeHtml = renderTree(hierarchy);
 
-
-// 2. Generate Index Page with Hybrid List/Viewer Layout
-const indexHtml = `
-<!DOCTYPE html>
+const indexHtml = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Molecule Viewer</title>
     <style>
+        *, *::before, *::after { box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            margin: 0; padding: 0;
+            display: flex; flex-direction: column;
+            height: 100vh; overflow: hidden;
             background-color: #f8f9fa;
         }
         .header {
-            height: 60px;
             background: white;
             border-bottom: 1px solid #e9ecef;
-            display: flex;
-            align-items: center;
-            padding: 0 1.5rem;
-            justify-content: space-between;
+            display: flex; flex-direction: column;
             z-index: 100;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             flex-shrink: 0;
         }
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
+        .header-row {
+            height: 56px;
+            display: flex; align-items: center;
+            padding: 0 1.25rem;
+            gap: 0.75rem;
+        }
+        .header-row-settings {
+            height: 48px;
+            display: flex; align-items: center;
+            padding: 0 1.25rem 0 1.25rem;
+            gap: 0.75rem;
+            border-top: 1px solid #f1f3f5;
+            background: #fafafa;
+            flex-wrap: wrap;
         }
         .brand {
-            font-size: 1.25rem;
-            font-weight: 600;
-            color: #333;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
+            font-size: 1.15rem; font-weight: 600; color: #333;
+            text-decoration: none; display: flex; align-items: center; gap: 0.4rem;
+            flex-shrink: 0;
         }
         .nav-btn {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            color: #495057;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.2s;
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            font-size: 0.95rem;
+            display: flex; align-items: center; gap: 0.4rem;
+            padding: 0.4rem 0.8rem; border-radius: 6px;
+            color: #495057; text-decoration: none;
+            font-weight: 500; font-size: 0.9rem;
+            transition: background-color 0.15s;
+            cursor: pointer; border: none; background: transparent;
+            white-space: nowrap;
         }
-        .nav-btn:hover {
-            background-color: #f1f3f5;
-            color: #212529;
-        }
-        .molecule-select-wrapper {
-            position: relative;
-        }
+        .nav-btn:hover { background-color: #f1f3f5; color: #212529; }
+        .separator { width: 1px; height: 24px; background: #dee2e6; flex-shrink: 0; }
+        .molecule-select-wrapper { position: relative; }
         .molecule-select {
-            padding: 0.5rem 2rem 0.5rem 1rem;
-            font-size: 0.95rem;
-            border: 1px solid #dee2e6;
-            border-radius: 6px;
-            background-color: #f8f9fa;
-            color: #495057;
-            cursor: pointer;
-            outline: none;
-            appearance: none;
-            -webkit-appearance: none;
-            font-family: inherit;
-            min-width: 200px;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            padding: 0.38rem 2rem 0.38rem 0.75rem;
+            font-size: 0.9rem; border: 1px solid #dee2e6;
+            border-radius: 6px; background-color: #f8f9fa;
+            color: #495057; cursor: pointer; outline: none;
+            appearance: none; -webkit-appearance: none;
+            font-family: inherit; min-width: 160px;
+            transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .molecule-select:hover {
-            border-color: #adb5bd;
-        }
-        .molecule-select:focus {
-            border-color: #339af0;
-            box-shadow: 0 0 0 2px rgba(51, 154, 240, 0.25);
-        }
+        .molecule-select:focus { border-color: #339af0; box-shadow: 0 0 0 2px rgba(51,154,240,0.2); }
         .select-arrow {
-            position: absolute;
-            right: 0.75rem;
-            top: 50%;
-            transform: translateY(-50%);
-            pointer-events: none;
-            color: #868e96;
+            position: absolute; right: 0.6rem; top: 50%;
+            transform: translateY(-50%); pointer-events: none; color: #868e96;
         }
-        .header-right {
-            display: flex;
-            align-items: center;
+        .header-spacer { flex: 1; }
+
+        /* Settings row */
+        .setting-group { display: flex; align-items: center; gap: 0.4rem; }
+        .setting-label { font-size: 0.8rem; color: #868e96; white-space: nowrap; }
+        .setting-select {
+            padding: 0.3rem 1.8rem 0.3rem 0.6rem;
+            font-size: 0.85rem; border: 1px solid #dee2e6;
+            border-radius: 5px; background-color: white;
+            color: #343a40; cursor: pointer; outline: none;
+            appearance: none; -webkit-appearance: none;
+            font-family: inherit;
+            transition: border-color 0.15s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23868e96' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.4rem center;
         }
-        
-        /* Main Content Area */
-        .main-content {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
+        .setting-select:focus { border-color: #339af0; }
+        .setting-slider-wrapper { display: flex; align-items: center; gap: 0.4rem; }
+        .setting-slider {
+            width: 80px; height: 4px; cursor: pointer;
+            accent-color: #339af0;
+        }
+        .setting-slider-val {
+            font-size: 0.78rem; color: #868e96;
+            min-width: 28px; text-align: right;
+        }
+        .setting-toggle-label {
+            display: flex; align-items: center; gap: 0.3rem;
+            font-size: 0.82rem; color: #495057;
+            cursor: pointer; user-select: none;
+        }
+        .setting-toggle {
+            width: 14px; height: 14px; cursor: pointer; accent-color: #339af0;
         }
 
-        /* List View Styles */
+        /* Share button */
+        .share-btn {
+            display: flex; align-items: center; gap: 0.4rem;
+            padding: 0.35rem 0.85rem; border-radius: 6px;
+            color: white; background: #339af0;
+            border: none; cursor: pointer;
+            font-size: 0.85rem; font-weight: 500;
+            transition: background 0.15s;
+            white-space: nowrap;
+        }
+        .share-btn:hover { background: #228be6; }
+        .share-btn.copied { background: #40c057; }
+
+        /* Main Content */
+        .main-content { flex: 1; position: relative; overflow: hidden; }
         .view-list {
-            height: 100%;
-            overflow-y: auto;
-            padding: 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            height: 100%; overflow-y: auto; padding: 2rem;
+            display: flex; flex-direction: column; align-items: center;
         }
         .tree-view {
-            width: 100%;
-            /* max-width: 800px; Removed to fill screen */
-            background: white;
-            border-radius: 12px;
-            padding: 1rem 0; /* Remove horizontal padding for full-width lines */
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            width: 100%; background: white; border-radius: 12px;
+            padding: 1rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             border: 1px solid #e9ecef;
         }
         .tree-row {
-            display: flex;
-            align-items: center;
-            padding: 0.75rem 1rem;
-            cursor: pointer;
-            border-bottom: 1px solid #e7f5ff; /* Light blue separator */
-            transition: background 0.1s;
-            color: #495057;
+            display: flex; align-items: center; padding: 0.7rem 1rem;
+            cursor: pointer; border-bottom: 1px solid #e7f5ff;
+            transition: background 0.1s; color: #495057;
         }
-        .tree-row:last-child {
-            border-bottom: none;
-        }
-        .tree-row:hover {
-            background: #f8f9fa; /* Very subtle hover */
-        }
-        .tree-indent {
-            display: inline-block;
-            width: 20px; /* Indentation unit */
-            flex-shrink: 0;
-        }
+        .tree-row:last-child { border-bottom: none; }
+        .tree-row:hover { background: #f8f9fa; }
+        .tree-indent { display: inline-block; flex-shrink: 0; }
         .toggle-arrow {
-            width: 20px;
-            height: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #adb5bd;
-            transition: transform 0.2s;
-            margin-right: 4px;
-            flex-shrink: 0;
+            width: 20px; height: 20px; display: flex;
+            align-items: center; justify-content: center;
+            color: #adb5bd; transition: transform 0.2s;
+            margin-right: 4px; flex-shrink: 0;
         }
-        .toggle-arrow svg {
-            width: 12px;
-            height: 12px;
-        }
-        .tree-row.open .toggle-arrow {
-            transform: rotate(90deg);
-        }
-        .row-icon {
-            margin-right: 8px;
-            display: flex;
-            align-items: center;
-            color: #339af0; /* Blue for folders/files */
-            flex-shrink: 0;
-        }
-        .row-name {
-            font-weight: 500;
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .row-comment {
-            font-size: 0.85rem;
-            color: #868e96;
-            margin-left: 1rem;
-        }
-        .folder-content {
-            display: none;
-        }
-        .folder-content.show {
-            display: block;
-        }
+        .toggle-arrow svg { width: 12px; height: 12px; }
+        .tree-row.open .toggle-arrow { transform: rotate(90deg); }
+        .row-icon { margin-right: 8px; display: flex; align-items: center; color: #339af0; flex-shrink: 0; }
+        .row-name { font-weight: 500; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .row-comment { font-size: 0.82rem; color: #868e96; margin-left: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 40%; }
+        .folder-content { display: none; }
+        .folder-content.show { display: block; }
 
-        /* Viewer View Styles */
         .view-viewer {
-            height: 100%;
-            display: none; /* Hidden by default */
-            padding: 2rem;
-            justify-content: center;
-            align-items: center;
+            height: 100%; display: none;
+            padding: 1.25rem;
+            justify-content: center; align-items: center;
             background-color: #f8f9fa;
-            box-sizing: border-box;
         }
         iframe {
-            width: 100%;
-            height: 100%;
-            border: 1px solid #e9ecef;
-            display: block;
-            border-radius: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            width: 100%; height: 100%; border: 1px solid #e9ecef;
+            display: block; border-radius: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
             background: white;
-            box-sizing: border-box;
         }
     </style>
 </head>
 <body>
     <header class="header">
-        <div class="header-left">
-            <a href="#" onclick="showList(); return false;" class="brand">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="color: #339af0;">
+        <!-- Top row: navigation -->
+        <div class="header-row">
+            <a href="?" onclick="showList(); return false;" class="brand">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="color:#339af0">
                     <path d="M18 9C19.6569 9 21 7.65685 21 6C21 4.34315 19.6569 3 18 3C16.3431 3 15 4.34315 15 6C15 6.12549 15.0077 6.24919 15.0227 6.37063L8.08261 9.84066C7.54305 9.32015 6.80891 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15C6.80891 15 7.54305 14.6798 8.08261 14.1593L15.0227 17.6294C15.0077 17.7508 15 17.8745 15 18C15 19.6569 16.3431 21 18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C17.1911 15 16.457 15.3202 15.9174 15.8407L8.97733 12.3706C8.99229 12.2492 9 12.1255 9 12C9 11.8745 8.99229 11.7508 8.97733 11.6294L15.9174 8.15934C16.457 8.67985 17.1911 9 18 9Z" fill="currentColor"/>
                 </svg>
                 molecule2url
             </a>
-            
+
             <button class="nav-btn" onclick="showList()">
-                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
                     <line x1="8" y1="6" x2="21" y2="6"></line>
                     <line x1="8" y1="12" x2="21" y2="12"></line>
                     <line x1="8" y1="18" x2="21" y2="18"></line>
@@ -379,120 +312,275 @@ const indexHtml = `
                     <line x1="3" y1="12" x2="3.01" y2="12"></line>
                     <line x1="3" y1="18" x2="3.01" y2="18"></line>
                 </svg>
-                List Molecules
+                List
             </button>
 
-            <div class="molecule-select-wrapper" id="moleculeSelectWrapper">
-                <select id="moleculeSelect" class="molecule-select" onchange="if(this.value) loadMolecule(this.value)">
+            <div class="molecule-select-wrapper">
+                <select id="moleculeSelect" class="molecule-select" onchange="if(this.value) selectMolecule(this.value)">
                     <option value="" disabled selected>Select Molecule</option>
-                    ${molecules.map(mol => `
-                    <option value="${mol.name}">${mol.name}</option>
-                    `).join('')}
+                    ${molecules.map(mol => `<option value="${mol.name}">${mol.name}</option>`).join('\n                    ')}
                 </select>
                 <div class="select-arrow">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <polyline points="6 9 12 15 18 9"></polyline>
                     </svg>
                 </div>
             </div>
-        </div>
-        
-        <div class="header-right">
+
+            <div class="header-spacer"></div>
+
+            <button id="shareBtn" class="share-btn" onclick="copyShareUrl()" title="Copy share URL with current settings">
+                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
+                    <path d="M18 9C19.6569 9 21 7.65685 21 6C21 4.34315 19.6569 3 18 3C16.3431 3 15 4.34315 15 6C15 6.12549 15.0077 6.24919 15.0227 6.37063L8.08261 9.84066C7.54305 9.32015 6.80891 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15C6.80891 15 7.54305 14.6798 8.08261 14.1593L15.0227 17.6294C15.0077 17.7508 15 17.8745 15 18C15 19.6569 16.3431 21 18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C17.1911 15 16.457 15.3202 15.9174 15.8407L8.97733 12.3706C8.99229 12.2492 9 12.1255 9 12C9 11.8745 8.99229 11.7508 8.97733 11.6294L15.9174 8.15934C16.457 8.67985 17.1911 9 18 9Z"/>
+                </svg>
+                Share
+            </button>
+
+            <div class="separator"></div>
+
             <a href="https://github.com/kangmg/molecule2url" target="_blank" class="nav-btn">
-                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none">
                     <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
                 </svg>
                 GitHub
             </a>
         </div>
+
+        <!-- Settings row -->
+        <div class="header-row-settings">
+            <div class="setting-group">
+                <span class="setting-label">Theme</span>
+                <select id="settingTheme" class="setting-select" onchange="onSettingChange()">
+                    <option value="simple">simple</option>
+                    <option value="dark">dark</option>
+                    <option value="darkgreen">darkgreen</option>
+                    <option value="spring">spring</option>
+                    <option value="glass">glass</option>
+                </select>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="setting-group">
+                <span class="setting-label">Style</span>
+                <select id="settingStyle" class="setting-select" onchange="onSettingChange()">
+                    <option value="default">default</option>
+                    <option value="cartoon">cartoon</option>
+                    <option value="neon">neon</option>
+                    <option value="glossy">glossy</option>
+                    <option value="metallic">metallic</option>
+                    <option value="rowan">rowan</option>
+                    <option value="grey">grey</option>
+                </select>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="setting-group">
+                <span class="setting-label">Atom size</span>
+                <div class="setting-slider-wrapper">
+                    <input type="range" id="settingAtomSize" class="setting-slider"
+                        min="0.1" max="1.5" step="0.05" value="0.5"
+                        oninput="document.getElementById('atomSizeVal').textContent=parseFloat(this.value).toFixed(2); onSettingChange()">
+                    <span id="atomSizeVal" class="setting-slider-val">0.50</span>
+                </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="setting-group">
+                <span class="setting-label">Bond threshold</span>
+                <div class="setting-slider-wrapper">
+                    <input type="range" id="settingBondThreshold" class="setting-slider"
+                        min="0.5" max="2.0" step="0.05" value="1.2"
+                        oninput="document.getElementById('bondThreshVal').textContent=parseFloat(this.value).toFixed(2); onSettingChange()">
+                    <span id="bondThreshVal" class="setting-slider-val">1.20</span>
+                </div>
+            </div>
+
+            <div class="separator"></div>
+
+            <div class="setting-group" style="gap:0.6rem">
+                <label class="setting-toggle-label">
+                    <input type="checkbox" id="settingShowCell" class="setting-toggle" onchange="onSettingChange()">
+                    Cell
+                </label>
+                <label class="setting-toggle-label">
+                    <input type="checkbox" id="settingShowBond" class="setting-toggle" checked onchange="onSettingChange()">
+                    Bond
+                </label>
+                <label class="setting-toggle-label">
+                    <input type="checkbox" id="settingShowHBond" class="setting-toggle" onchange="onSettingChange()">
+                    H-bond
+                </label>
+                <label class="setting-toggle-label">
+                    <input type="checkbox" id="settingShowAxis" class="setting-toggle" onchange="onSettingChange()">
+                    Axis
+                </label>
+            </div>
+        </div>
     </header>
 
     <div class="main-content">
-        <!-- List View -->
         <div id="viewList" class="view-list">
             <div class="tree-view">
                 ${treeHtml}
             </div>
         </div>
 
-        <!-- Viewer View -->
         <div id="viewViewer" class="view-viewer">
             <iframe id="viewerFrame" title="Molecule Viewer"></iframe>
         </div>
     </div>
 
     <script>
-        const viewList = document.getElementById('viewList');
-        const viewViewer = document.getElementById('viewViewer');
+        // ── State ──────────────────────────────────────────────────────────
+        const DEFAULTS = {
+            theme:          'simple',
+            style:          'default',
+            atomSize:       0.5,
+            bondThreshold:  1.2,
+            showCell:       false,
+            showBond:       true,
+            showHBond:      false,
+            showAxis:       false,
+        };
+
+        let currentMolecule = null;
+
+        // DOM refs
+        const viewList    = document.getElementById('viewList');
+        const viewViewer  = document.getElementById('viewViewer');
         const viewerFrame = document.getElementById('viewerFrame');
-        const moleculeSelect = document.getElementById('moleculeSelect');
-        const moleculeSelectWrapper = document.getElementById('moleculeSelectWrapper');
-        const listButton = document.querySelector('.nav-btn'); 
+        const molSelect   = document.getElementById('moleculeSelect');
 
-        function toggleFolder(row) {
-            // The content div is the next sibling of the row div in the container
-            const content = row.nextElementSibling;
-            
-            if (content.classList.contains('show')) {
-                content.classList.remove('show');
-                row.classList.remove('open');
-            } else {
-                content.classList.add('show');
-                row.classList.add('open');
-            }
-        } 
+        // ── Settings helpers ───────────────────────────────────────────────
+        function readSettings() {
+            return {
+                theme:         document.getElementById('settingTheme').value,
+                style:         document.getElementById('settingStyle').value,
+                atomSize:      parseFloat(document.getElementById('settingAtomSize').value),
+                bondThreshold: parseFloat(document.getElementById('settingBondThreshold').value),
+                showCell:      document.getElementById('settingShowCell').checked,
+                showBond:      document.getElementById('settingShowBond').checked,
+                showHBond:     document.getElementById('settingShowHBond').checked,
+                showAxis:      document.getElementById('settingShowAxis').checked,
+            };
+        }
 
+        function applySettingsToUI(s) {
+            document.getElementById('settingTheme').value          = s.theme         ?? DEFAULTS.theme;
+            document.getElementById('settingStyle').value          = s.style         ?? DEFAULTS.style;
+            document.getElementById('settingAtomSize').value       = s.atomSize      ?? DEFAULTS.atomSize;
+            document.getElementById('settingBondThreshold').value  = s.bondThreshold ?? DEFAULTS.bondThreshold;
+            document.getElementById('settingShowCell').checked     = s.showCell      ?? DEFAULTS.showCell;
+            document.getElementById('settingShowBond').checked     = s.showBond      ?? DEFAULTS.showBond;
+            document.getElementById('settingShowHBond').checked    = s.showHBond     ?? DEFAULTS.showHBond;
+            document.getElementById('settingShowAxis').checked     = s.showAxis      ?? DEFAULTS.showAxis;
+            document.getElementById('atomSizeVal').textContent     = parseFloat(s.atomSize      ?? DEFAULTS.atomSize).toFixed(2);
+            document.getElementById('bondThreshVal').textContent   = parseFloat(s.bondThreshold ?? DEFAULTS.bondThreshold).toFixed(2);
+        }
+
+        // ── URL helpers ────────────────────────────────────────────────────
+        function buildParams(mol, settings) {
+            const p = new URLSearchParams();
+            p.set('molecule', mol);
+            // Always include all settings so the share URL is fully self-contained.
+            // Viewer.html also reads extra arbitrary params, so additional URL params
+            // (e.g. ?backgroundColor=%23ff0000) work even without a UI control.
+            Object.entries(settings).forEach(([k, v]) => p.set(k, v));
+            return p;
+        }
+
+        function buildViewerUrl(mol, settings) {
+            return 'viewer.html?' + buildParams(mol, settings).toString();
+        }
+
+        function buildShareUrl(mol, settings) {
+            const base = window.location.origin + window.location.pathname;
+            return base + '?' + buildParams(mol, settings).toString();
+        }
+
+        // ── Navigation ─────────────────────────────────────────────────────
         function showList() {
-            viewList.style.display = 'flex';
+            currentMolecule = null;
+            viewList.style.display  = 'flex';
             viewViewer.style.display = 'none';
-            // moleculeSelectWrapper.style.display = 'none'; // Keep visible
-            // listButton.style.display = 'none'; // Keep visible
-            
-            moleculeSelect.value = ""; // Reset selection
-            
-            // Only push state if we are not already at root to avoid redundant history entries
-            if (window.location.hash) {
-                history.pushState(null, '', window.location.pathname);
-            }
+            molSelect.value = '';
+            history.pushState(null, '', window.location.pathname);
         }
 
         function selectMolecule(molName) {
-            viewList.style.display = 'none';
-            viewViewer.style.display = 'block';
-            // moleculeSelectWrapper.style.display = 'block'; // Always visible
-            // listButton.style.display = 'flex'; // Always visible
-            
-            // Update dropdown
-            moleculeSelect.value = molName;
-            
-            // Load iframe only if changed
-            const targetSrc = 'viewer.html?molecule=' + molName;
-            if (viewerFrame.getAttribute('src') !== targetSrc) {
-                viewerFrame.src = targetSrc;
+            currentMolecule = molName;
+            viewList.style.display   = 'none';
+            viewViewer.style.display = 'flex';
+            molSelect.value = molName;
+
+            const settings = readSettings();
+            const src = buildViewerUrl(molName, settings);
+            if (viewerFrame.getAttribute('src') !== src) {
+                viewerFrame.src = src;
             }
-            
-            // Update URL hash if different
-            if (window.location.hash !== '#' + molName) {
-                window.location.hash = molName;
-            }
+
+            history.replaceState(null, '', buildShareUrl(molName, settings));
         }
 
-        function loadMolecule(molName) {
-            selectMolecule(molName);
+        function onSettingChange() {
+            if (currentMolecule) selectMolecule(currentMolecule);
         }
 
+        function toggleFolder(row) {
+            const content = row.nextElementSibling;
+            content.classList.toggle('show');
+            row.classList.toggle('open');
+        }
+
+        // ── Share button ───────────────────────────────────────────────────
+        function copyShareUrl() {
+            let url;
+            if (currentMolecule) {
+                url = buildShareUrl(currentMolecule, readSettings());
+            } else {
+                url = window.location.origin + window.location.pathname;
+            }
+            navigator.clipboard.writeText(url).then(() => {
+                const btn = document.getElementById('shareBtn');
+                btn.classList.add('copied');
+                btn.innerHTML = \`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!\`;
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = \`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M18 9C19.6569 9 21 7.65685 21 6C21 4.34315 19.6569 3 18 3C16.3431 3 15 4.34315 15 6C15 6.12549 15.0077 6.24919 15.0227 6.37063L8.08261 9.84066C7.54305 9.32015 6.80891 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15C6.80891 15 7.54305 14.6798 8.08261 14.1593L15.0227 17.6294C15.0077 17.7508 15 17.8745 15 18C15 19.6569 16.3431 21 18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C17.1911 15 16.457 15.3202 15.9174 15.8407L8.97733 12.3706C8.99229 12.2492 9 12.1255 9 12C9 11.8745 8.99229 11.7508 8.97733 11.6294L15.9174 8.15934C16.457 8.67985 17.1911 9 18 9Z"/></svg> Share\`;
+                }, 2000);
+            });
+        }
+
+        // ── Route on load ──────────────────────────────────────────────────
         function handleRoute() {
-            const hash = window.location.hash.substring(1);
-            if (hash) {
-                selectMolecule(hash);
+            const params = new URLSearchParams(location.search);
+            const mol    = params.get('molecule');
+
+            // Restore settings from URL if present
+            const restored = {};
+            if (params.has('theme'))         restored.theme         = params.get('theme');
+            if (params.has('style'))         restored.style         = params.get('style');
+            if (params.has('atomSize'))      restored.atomSize      = parseFloat(params.get('atomSize'));
+            if (params.has('bondThreshold')) restored.bondThreshold = parseFloat(params.get('bondThreshold'));
+            if (params.has('showCell'))      restored.showCell      = params.get('showCell') === 'true';
+            if (params.has('showBond'))      restored.showBond      = params.get('showBond') === 'true';
+            if (params.has('showHBond'))     restored.showHBond     = params.get('showHBond') === 'true';
+            if (params.has('showAxis'))      restored.showAxis      = params.get('showAxis') === 'true';
+
+            applySettingsToUI({ ...DEFAULTS, ...restored });
+
+            if (mol) {
+                selectMolecule(mol);
             } else {
                 showList();
             }
         }
 
-        // Event Listeners
         window.addEventListener('load', handleRoute);
-        window.addEventListener('hashchange', handleRoute);
+        window.addEventListener('popstate', handleRoute);
     </script>
 </body>
 </html>
