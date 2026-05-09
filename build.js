@@ -100,7 +100,7 @@ const indexHtml = `<!DOCTYPE html>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Molecule Viewer</title>
-    <script src="https://cdn.jsdelivr.net/gh/kangmg/aseview@main/aseview/static/js/aseview.js"><\/script>
+    <script src="./aseview.js"><\/script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
@@ -380,29 +380,42 @@ const indexHtml = `<!DOCTYPE html>
         }
 
         // ── URL management ─────────────────────────────────────────────────
-        function buildShareUrl() {
+        function buildShareUrl(settings) {
             const p = new URLSearchParams();
             p.set('molecule', currentMol);
             p.set('theme', themeSelect.value);
-            // Include all settings that were originally in the URL (or set programmatically)
-            Object.entries(urlSettings).forEach(([k, v]) => p.set(k, v));
+            // Encode all live viewer settings into the URL
+            const OMIT = new Set(['theme']); // already set above
+            ALL_PARAMS.forEach(k => {
+                if (!OMIT.has(k) && settings[k] !== undefined) p.set(k, settings[k]);
+            });
             return location.origin + location.pathname + '?' + p.toString();
         }
 
         function updateUrl() {
-            if (!currentMol) return;
-            history.replaceState(null, '', buildShareUrl());
+            if (!currentMol || !viewer) return;
+            viewer.getSettings().then(s => {
+                history.replaceState(null, '', buildShareUrl(s));
+            });
         }
 
         function copyShareUrl() {
-            const url = currentMol ? buildShareUrl() : location.origin + location.pathname;
-            navigator.clipboard.writeText(url).then(() => {
-                const btn = document.getElementById('shareBtn');
+            const btn = document.getElementById('shareBtn');
+            if (!currentMol || !viewer) {
+                navigator.clipboard.writeText(location.origin + location.pathname);
+                return;
+            }
+            btn.disabled = true;
+            viewer.getSettings().then(settings => {
+                const url = buildShareUrl(settings);
+                history.replaceState(null, '', url);
+                return navigator.clipboard.writeText(url);
+            }).then(() => {
                 const orig = btn.innerHTML;
                 btn.classList.add('copied');
                 btn.innerHTML = \`<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!\`;
-                setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 2000);
-            });
+                setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; btn.disabled = false; }, 2000);
+            }).catch(() => { btn.disabled = false; });
         }
 
         // ── Route on load ──────────────────────────────────────────────────
