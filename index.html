@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Molecule Viewer</title>
+    <script src="https://cdn.jsdelivr.net/gh/kangmg/aseview@main/aseview/static/js/aseview.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; }
         body {
@@ -14,30 +15,18 @@
             background-color: #f8f9fa;
         }
         .header {
+            height: 56px;
             background: white;
             border-bottom: 1px solid #e9ecef;
-            display: flex; flex-direction: column;
+            display: flex; align-items: center;
+            padding: 0 1.25rem;
+            gap: 0.75rem;
             z-index: 100;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             flex-shrink: 0;
         }
-        .header-row {
-            height: 56px;
-            display: flex; align-items: center;
-            padding: 0 1.25rem;
-            gap: 0.75rem;
-        }
-        .header-row-settings {
-            height: 48px;
-            display: flex; align-items: center;
-            padding: 0 1.25rem 0 1.25rem;
-            gap: 0.75rem;
-            border-top: 1px solid #f1f3f5;
-            background: #fafafa;
-            flex-wrap: wrap;
-        }
         .brand {
-            font-size: 1.15rem; font-weight: 600; color: #333;
+            font-size: 1.1rem; font-weight: 600; color: #333;
             text-decoration: none; display: flex; align-items: center; gap: 0.4rem;
             flex-shrink: 0;
         }
@@ -48,83 +37,51 @@
             font-weight: 500; font-size: 0.9rem;
             transition: background-color 0.15s;
             cursor: pointer; border: none; background: transparent;
-            white-space: nowrap;
+            white-space: nowrap; flex-shrink: 0;
         }
         .nav-btn:hover { background-color: #f1f3f5; color: #212529; }
-        .separator { width: 1px; height: 24px; background: #dee2e6; flex-shrink: 0; }
-        .molecule-select-wrapper { position: relative; }
-        .molecule-select {
+        .separator { width: 1px; height: 22px; background: #dee2e6; flex-shrink: 0; }
+        .select-wrapper { position: relative; flex-shrink: 0; }
+        .styled-select {
             padding: 0.38rem 2rem 0.38rem 0.75rem;
-            font-size: 0.9rem; border: 1px solid #dee2e6;
+            font-size: 0.88rem; border: 1px solid #dee2e6;
             border-radius: 6px; background-color: #f8f9fa;
             color: #495057; cursor: pointer; outline: none;
             appearance: none; -webkit-appearance: none;
-            font-family: inherit; min-width: 160px;
+            font-family: inherit;
             transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .molecule-select:focus { border-color: #339af0; box-shadow: 0 0 0 2px rgba(51,154,240,0.2); }
+        .styled-select:focus { border-color: #339af0; box-shadow: 0 0 0 2px rgba(51,154,240,0.2); }
+        #moleculeSelect { min-width: 160px; }
         .select-arrow {
             position: absolute; right: 0.6rem; top: 50%;
             transform: translateY(-50%); pointer-events: none; color: #868e96;
         }
-        .header-spacer { flex: 1; }
-
-        /* Settings row */
-        .setting-group { display: flex; align-items: center; gap: 0.4rem; }
-        .setting-label { font-size: 0.8rem; color: #868e96; white-space: nowrap; }
-        .setting-select {
-            padding: 0.3rem 1.8rem 0.3rem 0.6rem;
-            font-size: 0.85rem; border: 1px solid #dee2e6;
-            border-radius: 5px; background-color: white;
-            color: #343a40; cursor: pointer; outline: none;
-            appearance: none; -webkit-appearance: none;
-            font-family: inherit;
-            transition: border-color 0.15s;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23868e96' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 0.4rem center;
-        }
-        .setting-select:focus { border-color: #339af0; }
-        .setting-slider-wrapper { display: flex; align-items: center; gap: 0.4rem; }
-        .setting-slider {
-            width: 80px; height: 4px; cursor: pointer;
-            accent-color: #339af0;
-        }
-        .setting-slider-val {
-            font-size: 0.78rem; color: #868e96;
-            min-width: 28px; text-align: right;
-        }
-        .setting-toggle-label {
-            display: flex; align-items: center; gap: 0.3rem;
-            font-size: 0.82rem; color: #495057;
-            cursor: pointer; user-select: none;
-        }
-        .setting-toggle {
-            width: 14px; height: 14px; cursor: pointer; accent-color: #339af0;
-        }
-
-        /* Share button */
+        .theme-label { font-size: 0.82rem; color: #868e96; flex-shrink: 0; }
+        .spacer { flex: 1; }
         .share-btn {
             display: flex; align-items: center; gap: 0.4rem;
-            padding: 0.35rem 0.85rem; border-radius: 6px;
+            padding: 0.38rem 0.9rem; border-radius: 6px;
             color: white; background: #339af0;
             border: none; cursor: pointer;
-            font-size: 0.85rem; font-weight: 500;
+            font-size: 0.88rem; font-weight: 500;
             transition: background 0.15s;
-            white-space: nowrap;
+            white-space: nowrap; flex-shrink: 0;
         }
         .share-btn:hover { background: #228be6; }
         .share-btn.copied { background: #40c057; }
 
-        /* Main Content */
         .main-content { flex: 1; position: relative; overflow: hidden; }
+
         .view-list {
-            height: 100%; overflow-y: auto; padding: 2rem;
+            position: absolute; inset: 0;
+            overflow-y: auto; padding: 2rem;
             display: flex; flex-direction: column; align-items: center;
         }
         .tree-view {
             width: 100%; background: white; border-radius: 12px;
-            padding: 1rem 0; box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             border: 1px solid #e9ecef;
         }
         .tree-row {
@@ -136,10 +93,9 @@
         .tree-row:hover { background: #f8f9fa; }
         .tree-indent { display: inline-block; flex-shrink: 0; }
         .toggle-arrow {
-            width: 20px; height: 20px; display: flex;
-            align-items: center; justify-content: center;
-            color: #adb5bd; transition: transform 0.2s;
-            margin-right: 4px; flex-shrink: 0;
+            width: 20px; height: 20px; display: flex; align-items: center;
+            justify-content: center; color: #adb5bd;
+            transition: transform 0.2s; margin-right: 4px; flex-shrink: 0;
         }
         .toggle-arrow svg { width: 12px; height: 12px; }
         .tree-row.open .toggle-arrow { transform: rotate(90deg); }
@@ -150,476 +106,313 @@
         .folder-content.show { display: block; }
 
         .view-viewer {
-            height: 100%; display: none;
-            padding: 1.25rem;
-            justify-content: center; align-items: center;
-            background-color: #f8f9fa;
+            position: absolute; inset: 0;
+            display: none;
         }
-        iframe {
-            width: 100%; height: 100%; border: 1px solid #e9ecef;
-            display: block; border-radius: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            background: white;
-        }
+        #aseViewContainer { width: 100%; height: 100%; }
     </style>
 </head>
 <body>
     <header class="header">
-        <!-- Top row: navigation -->
-        <div class="header-row">
-            <a href="?" onclick="showList(); return false;" class="brand">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="color:#339af0">
-                    <path d="M18 9C19.6569 9 21 7.65685 21 6C21 4.34315 19.6569 3 18 3C16.3431 3 15 4.34315 15 6C15 6.12549 15.0077 6.24919 15.0227 6.37063L8.08261 9.84066C7.54305 9.32015 6.80891 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15C6.80891 15 7.54305 14.6798 8.08261 14.1593L15.0227 17.6294C15.0077 17.7508 15 17.8745 15 18C15 19.6569 16.3431 21 18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C17.1911 15 16.457 15.3202 15.9174 15.8407L8.97733 12.3706C8.99229 12.2492 9 12.1255 9 12C9 11.8745 8.99229 11.7508 8.97733 11.6294L15.9174 8.15934C16.457 8.67985 17.1911 9 18 9Z" fill="currentColor"/>
-                </svg>
-                molecule2url
-            </a>
+        <a href="?" onclick="showList(); return false;" class="brand">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="color:#339af0">
+                <path d="M18 9C19.6569 9 21 7.65685 21 6C21 4.34315 19.6569 3 18 3C16.3431 3 15 4.34315 15 6C15 6.12549 15.0077 6.24919 15.0227 6.37063L8.08261 9.84066C7.54305 9.32015 6.80891 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15C6.80891 15 7.54305 14.6798 8.08261 14.1593L15.0227 17.6294C15.0077 17.7508 15 17.8745 15 18C15 19.6569 16.3431 21 18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C17.1911 15 16.457 15.3202 15.9174 15.8407L8.97733 12.3706C8.99229 12.2492 9 12.1255 9 12C9 11.8745 8.99229 11.7508 8.97733 11.6294L15.9174 8.15934C16.457 8.67985 17.1911 9 18 9Z" fill="currentColor"/>
+            </svg>
+            molecule2url
+        </a>
 
-            <button class="nav-btn" onclick="showList()">
-                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
-                    <line x1="8" y1="6" x2="21" y2="6"></line>
-                    <line x1="8" y1="12" x2="21" y2="12"></line>
-                    <line x1="8" y1="18" x2="21" y2="18"></line>
-                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
-                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
-                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
-                </svg>
-                List
-            </button>
+        <button class="nav-btn" onclick="showList()">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none">
+                <line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line>
+                <line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line>
+                <line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line>
+            </svg>
+            List
+        </button>
 
-            <div class="molecule-select-wrapper">
-                <select id="moleculeSelect" class="molecule-select" onchange="if(this.value) selectMolecule(this.value)">
-                    <option value="" disabled selected>Select Molecule</option>
-                    <option value="HB_test">HB_test</option>
-                    <option value="I4P_traj">I4P_traj</option>
-                    <option value="JACS_reproduce_sampled">JACS_reproduce_sampled</option>
-                    <option value="M4P_traj">M4P_traj</option>
-                    <option value="ddfs">ddfs</option>
-                    <option value="first-share">first-share</option>
-                    <option value="rxn1">rxn1</option>
-                    <option value="rxn2">rxn2</option>
-                    <option value="test/water">test/water</option>
-                    <option value="wittig">wittig</option>
-                </select>
-                <div class="select-arrow">
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                    </svg>
-                </div>
+        <div class="select-wrapper">
+            <select id="moleculeSelect" class="styled-select" onchange="if(this.value) selectMolecule(this.value)">
+                <option value="" disabled selected>Select Molecule</option>
+                <option value="HB_test">HB_test</option>
+                <option value="I4P_traj">I4P_traj</option>
+                <option value="JACS_reproduce_sampled">JACS_reproduce_sampled</option>
+                <option value="M4P_traj">M4P_traj</option>
+                <option value="ddfs">ddfs</option>
+                <option value="first-share">first-share</option>
+                <option value="rxn1">rxn1</option>
+                <option value="rxn2">rxn2</option>
+                <option value="test/water">test/water</option>
+                <option value="wittig">wittig</option>
+            </select>
+            <div class="select-arrow">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
             </div>
-
-            <div class="header-spacer"></div>
-
-            <button id="shareBtn" class="share-btn" onclick="copyShareUrl()" title="Copy share URL with current settings">
-                <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
-                    <path d="M18 9C19.6569 9 21 7.65685 21 6C21 4.34315 19.6569 3 18 3C16.3431 3 15 4.34315 15 6C15 6.12549 15.0077 6.24919 15.0227 6.37063L8.08261 9.84066C7.54305 9.32015 6.80891 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15C6.80891 15 7.54305 14.6798 8.08261 14.1593L15.0227 17.6294C15.0077 17.7508 15 17.8745 15 18C15 19.6569 16.3431 21 18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C17.1911 15 16.457 15.3202 15.9174 15.8407L8.97733 12.3706C8.99229 12.2492 9 12.1255 9 12C9 11.8745 8.99229 11.7508 8.97733 11.6294L15.9174 8.15934C16.457 8.67985 17.1911 9 18 9Z"/>
-                </svg>
-                Share
-            </button>
-
-            <div class="separator"></div>
-
-            <a href="https://github.com/kangmg/molecule2url" target="_blank" class="nav-btn">
-                <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none">
-                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
-                </svg>
-                GitHub
-            </a>
         </div>
 
-        <!-- Settings row -->
-        <div class="header-row-settings">
-            <div class="setting-group">
-                <span class="setting-label">Theme</span>
-                <select id="settingTheme" class="setting-select" onchange="onSettingChange()">
-                    <option value="simple">simple</option>
-                    <option value="dark">dark</option>
-                    <option value="darkgreen">darkgreen</option>
-                    <option value="spring">spring</option>
-                    <option value="glass">glass</option>
-                </select>
-            </div>
+        <div class="separator"></div>
 
-            <div class="separator"></div>
-
-            <div class="setting-group">
-                <span class="setting-label">Style</span>
-                <select id="settingStyle" class="setting-select" onchange="onSettingChange()">
-                    <option value="default">default</option>
-                    <option value="cartoon">cartoon</option>
-                    <option value="neon">neon</option>
-                    <option value="glossy">glossy</option>
-                    <option value="metallic">metallic</option>
-                    <option value="rowan">rowan</option>
-                    <option value="grey">grey</option>
-                </select>
-            </div>
-
-            <div class="separator"></div>
-
-            <div class="setting-group">
-                <span class="setting-label">Atom size</span>
-                <div class="setting-slider-wrapper">
-                    <input type="range" id="settingAtomSize" class="setting-slider"
-                        min="0.1" max="1.5" step="0.05" value="0.5"
-                        oninput="document.getElementById('atomSizeVal').textContent=parseFloat(this.value).toFixed(2); onSettingChange()">
-                    <span id="atomSizeVal" class="setting-slider-val">0.50</span>
-                </div>
-            </div>
-
-            <div class="separator"></div>
-
-            <div class="setting-group">
-                <span class="setting-label">Bond threshold</span>
-                <div class="setting-slider-wrapper">
-                    <input type="range" id="settingBondThreshold" class="setting-slider"
-                        min="0.5" max="2.0" step="0.05" value="1.2"
-                        oninput="document.getElementById('bondThreshVal').textContent=parseFloat(this.value).toFixed(2); onSettingChange()">
-                    <span id="bondThreshVal" class="setting-slider-val">1.20</span>
-                </div>
-            </div>
-
-            <div class="separator"></div>
-
-            <div class="setting-group" style="gap:0.6rem">
-                <label class="setting-toggle-label">
-                    <input type="checkbox" id="settingShowCell" class="setting-toggle" onchange="onSettingChange()">
-                    Cell
-                </label>
-                <label class="setting-toggle-label">
-                    <input type="checkbox" id="settingShowBond" class="setting-toggle" checked onchange="onSettingChange()">
-                    Bond
-                </label>
-                <label class="setting-toggle-label">
-                    <input type="checkbox" id="settingShowHBond" class="setting-toggle" onchange="onSettingChange()">
-                    H-bond
-                </label>
-                <label class="setting-toggle-label">
-                    <input type="checkbox" id="settingShowAxis" class="setting-toggle" onchange="onSettingChange()">
-                    Axis
-                </label>
+        <span class="theme-label">Theme</span>
+        <div class="select-wrapper">
+            <select id="themeSelect" class="styled-select" onchange="onThemeChange()">
+                <option value="simple">simple</option>
+                <option value="dark">dark</option>
+                <option value="darkgreen">darkgreen</option>
+                <option value="spring">spring</option>
+                <option value="glass">glass</option>
+            </select>
+            <div class="select-arrow">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
             </div>
         </div>
+
+        <div class="spacer"></div>
+
+        <button id="shareBtn" class="share-btn" onclick="copyShareUrl()">
+            <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none">
+                <path d="M18 9C19.6569 9 21 7.65685 21 6C21 4.34315 19.6569 3 18 3C16.3431 3 15 4.34315 15 6C15 6.12549 15.0077 6.24919 15.0227 6.37063L8.08261 9.84066C7.54305 9.32015 6.80891 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15C6.80891 15 7.54305 14.6798 8.08261 14.1593L15.0227 17.6294C15.0077 17.7508 15 17.8745 15 18C15 19.6569 16.3431 21 18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C17.1911 15 16.457 15.3202 15.9174 15.8407L8.97733 12.3706C8.99229 12.2492 9 12.1255 9 12C9 11.8745 8.99229 11.7508 8.97733 11.6294L15.9174 8.15934C16.457 8.67985 17.1911 9 18 9Z"/>
+            </svg>
+            Share
+        </button>
+
+        <div class="separator"></div>
+
+        <a href="https://github.com/kangmg/molecule2url" target="_blank" class="nav-btn">
+            <svg viewBox="0 0 24 24" width="17" height="17" stroke="currentColor" stroke-width="2" fill="none">
+                <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+            </svg>
+            GitHub
+        </a>
     </header>
 
     <div class="main-content">
         <div id="viewList" class="view-list">
             <div class="tree-view">
                 
-                <div class="tree-folder-container">
-                    <div class="tree-row" onclick="toggleFolder(this)">
-                        <span class="tree-indent" style="width: 0px"></span>
-                        <div class="toggle-arrow">
-                            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-                        </div>
-                        <div class="row-icon">
-                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-                                <path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/>
-                            </svg>
-                        </div>
-                        <span class="row-name">test</span>
-                    </div>
-                    <div class="folder-content">
-                        
-                <div class="tree-row" onclick="selectMolecule('test/water')">
-                    <span class="tree-indent" style="width: 24px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">water</span>
-                    <span class="row-comment">Test water molecule</span>
+            <div class="tree-folder-container">
+                <div class="tree-row" onclick="toggleFolder(this)">
+                    <span class="tree-indent" style="width:0px"></span>
+                    <div class="toggle-arrow"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></div>
+                    <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm0 12H4V8h16v10z"/></svg></div>
+                    <span class="row-name">test</span>
                 </div>
-                    </div>
-                </div>
-                <div class="tree-row" onclick="selectMolecule('ddfs')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">ddfs</span>
-                    <span class="row-comment">Extracted from viewer.html</span>
-                </div>
-                <div class="tree-row" onclick="selectMolecule('first-share')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">first-share</span>
-                    <span class="row-comment">Extracted from viewer.html</span>
-                </div>
-                <div class="tree-row" onclick="selectMolecule('HB_test')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">HB_test</span>
-                    <span class="row-comment">charge: 0; multiplicity: 1; generated_by: Rowan; timestamp: 2025-11-28 00:29:28; name: Step 1;;</span>
-                </div>
-                <div class="tree-row" onclick="selectMolecule('I4P_traj')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">I4P_traj</span>
-                    <span class="row-comment"># ORCA AIMD Position Step 0, t=0.00 fs, E_Pot=-6934633.06343014 kJ mol^-1, Unit is Angstrom</span>
-                </div>
-                <div class="tree-row" onclick="selectMolecule('JACS_reproduce_sampled')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">JACS_reproduce_sampled</span>
-                    
-                </div>
-                <div class="tree-row" onclick="selectMolecule('M4P_traj')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">M4P_traj</span>
-                    <span class="row-comment"># ORCA AIMD Position Step 0, t=0.00 fs, E_Pot=-8082321.05549101 kJ mol^-1, Unit is Angstrom</span>
-                </div>
-                <div class="tree-row" onclick="selectMolecule('rxn1')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">rxn1</span>
-                    
-                </div>
-                <div class="tree-row" onclick="selectMolecule('rxn2')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">rxn2</span>
-                    
-                </div>
-                <div class="tree-row" onclick="selectMolecule('wittig')">
-                    <span class="tree-indent" style="width: 0px"></span>
-                    <div class="toggle-arrow"></div>
-                    <div class="row-icon">
-                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                            <polyline points="14 2 14 8 20 8"></polyline>
-                            <line x1="16" y1="13" x2="8" y2="13"></line>
-                            <line x1="16" y1="17" x2="8" y2="17"></line>
-                            <polyline points="10 9 9 9 8 9"></polyline>
-                        </svg>
-                    </div>
-                    <span class="row-name">wittig</span>
-                    <span class="row-comment">0 1 0.059778</span>
-                </div>
+                <div class="folder-content">
+            <div class="tree-row" onclick="selectMolecule('test/water')">
+                <span class="tree-indent" style="width:24px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">water</span>
+                <span class="row-comment">Test water molecule</span>
+            </div></div>
+            </div>
+            <div class="tree-row" onclick="selectMolecule('ddfs')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">ddfs</span>
+                <span class="row-comment">Extracted from viewer.html</span>
+            </div>
+            <div class="tree-row" onclick="selectMolecule('first-share')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">first-share</span>
+                <span class="row-comment">Extracted from viewer.html</span>
+            </div>
+            <div class="tree-row" onclick="selectMolecule('HB_test')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">HB_test</span>
+                <span class="row-comment">charge: 0; multiplicity: 1; generated_by: Rowan; timestamp: 2025-11-28 00:29:28; name: Step 1;;</span>
+            </div>
+            <div class="tree-row" onclick="selectMolecule('I4P_traj')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">I4P_traj</span>
+                <span class="row-comment"># ORCA AIMD Position Step 0, t=0.00 fs, E_Pot=-6934633.06343014 kJ mol^-1, Unit is Angstrom</span>
+            </div>
+            <div class="tree-row" onclick="selectMolecule('JACS_reproduce_sampled')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">JACS_reproduce_sampled</span>
+                
+            </div>
+            <div class="tree-row" onclick="selectMolecule('M4P_traj')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">M4P_traj</span>
+                <span class="row-comment"># ORCA AIMD Position Step 0, t=0.00 fs, E_Pot=-8082321.05549101 kJ mol^-1, Unit is Angstrom</span>
+            </div>
+            <div class="tree-row" onclick="selectMolecule('rxn1')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">rxn1</span>
+                
+            </div>
+            <div class="tree-row" onclick="selectMolecule('rxn2')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">rxn2</span>
+                
+            </div>
+            <div class="tree-row" onclick="selectMolecule('wittig')">
+                <span class="tree-indent" style="width:0px"></span>
+                <div class="toggle-arrow"></div>
+                <div class="row-icon"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+                <span class="row-name">wittig</span>
+                <span class="row-comment">0 1 0.059778</span>
+            </div>
             </div>
         </div>
-
         <div id="viewViewer" class="view-viewer">
-            <iframe id="viewerFrame" title="Molecule Viewer"></iframe>
+            <div id="aseViewContainer"></div>
         </div>
     </div>
 
     <script>
+        // ── Param definitions (mirrors viewer.html) ────────────────────────
+        const FLOAT_PARAMS = ['atomSize','bondThreshold','bondThickness','radiusContrast','animationSpeed','forceScale','hBondThreshold','polyhedronOpacity','ringOpacity'];
+        const BOOL_PARAMS  = ['showCell','showBond','showHBond','showAxis','showShading','showConstraint','showEnergyPlot','showForceMaxPlot','showForces','showPolyhedron','showRings'];
+        const STR_PARAMS   = ['style','backgroundColor','cellColor','colorBy','viewMode','rotationMode','radiusContrastMode','colorScheme'];
+        const ALL_PARAMS   = [...FLOAT_PARAMS, ...BOOL_PARAMS, ...STR_PARAMS];
+
         // ── State ──────────────────────────────────────────────────────────
-        const DEFAULTS = {
-            theme:          'simple',
-            style:          'default',
-            atomSize:       0.5,
-            bondThreshold:  1.2,
-            showCell:       false,
-            showBond:       true,
-            showHBond:      false,
-            showAxis:       false,
-        };
+        let viewer        = null;
+        let currentMol    = null;
+        let urlSettings   = {}; // settings from URL (passed to aseview on load)
 
-        let currentMolecule = null;
+        // ── DOM ────────────────────────────────────────────────────────────
+        const viewList         = document.getElementById('viewList');
+        const viewViewer       = document.getElementById('viewViewer');
+        const molSelect        = document.getElementById('moleculeSelect');
+        const themeSelect      = document.getElementById('themeSelect');
 
-        // DOM refs
-        const viewList    = document.getElementById('viewList');
-        const viewViewer  = document.getElementById('viewViewer');
-        const viewerFrame = document.getElementById('viewerFrame');
-        const molSelect   = document.getElementById('moleculeSelect');
-
-        // ── Settings helpers ───────────────────────────────────────────────
-        function readSettings() {
-            return {
-                theme:         document.getElementById('settingTheme').value,
-                style:         document.getElementById('settingStyle').value,
-                atomSize:      parseFloat(document.getElementById('settingAtomSize').value),
-                bondThreshold: parseFloat(document.getElementById('settingBondThreshold').value),
-                showCell:      document.getElementById('settingShowCell').checked,
-                showBond:      document.getElementById('settingShowBond').checked,
-                showHBond:     document.getElementById('settingShowHBond').checked,
-                showAxis:      document.getElementById('settingShowAxis').checked,
-            };
+        // ── XYZ parser ─────────────────────────────────────────────────────
+        function parseXYZ(text) {
+            const frames = [], lines = text.split('\n');
+            let i = 0;
+            while (i < lines.length) {
+                while (i < lines.length && !lines[i].trim()) i++;
+                if (i >= lines.length) break;
+                const n = parseInt(lines[i].trim(), 10);
+                if (isNaN(n) || n <= 0 || i + 1 + n >= lines.length) break;
+                const symbols = [], positions = [];
+                for (let j = 0; j < n; j++) {
+                    const parts = lines[i + 2 + j].trim().split(/\s+/);
+                    if (parts.length < 4) continue;
+                    symbols.push(parts[0]);
+                    positions.push([parseFloat(parts[1]), parseFloat(parts[2]), parseFloat(parts[3])]);
+                }
+                frames.push({ symbols, positions });
+                i += 2 + n;
+            }
+            return frames;
         }
 
-        function applySettingsToUI(s) {
-            document.getElementById('settingTheme').value          = s.theme         ?? DEFAULTS.theme;
-            document.getElementById('settingStyle').value          = s.style         ?? DEFAULTS.style;
-            document.getElementById('settingAtomSize').value       = s.atomSize      ?? DEFAULTS.atomSize;
-            document.getElementById('settingBondThreshold').value  = s.bondThreshold ?? DEFAULTS.bondThreshold;
-            document.getElementById('settingShowCell').checked     = s.showCell      ?? DEFAULTS.showCell;
-            document.getElementById('settingShowBond').checked     = s.showBond      ?? DEFAULTS.showBond;
-            document.getElementById('settingShowHBond').checked    = s.showHBond     ?? DEFAULTS.showHBond;
-            document.getElementById('settingShowAxis').checked     = s.showAxis      ?? DEFAULTS.showAxis;
-            document.getElementById('atomSizeVal').textContent     = parseFloat(s.atomSize      ?? DEFAULTS.atomSize).toFixed(2);
-            document.getElementById('bondThreshVal').textContent   = parseFloat(s.bondThreshold ?? DEFAULTS.bondThreshold).toFixed(2);
+        // ── Viewer lifecycle ───────────────────────────────────────────────
+        function initViewer(theme) {
+            if (viewer) { try { viewer.dispose(); } catch(e) {} viewer = null; }
+            document.getElementById('aseViewContainer').innerHTML = '';
+            viewer = new ASEView.MolecularViewer('#aseViewContainer', { theme });
         }
 
-        // ── URL helpers ────────────────────────────────────────────────────
-        function buildParams(mol, settings) {
-            const p = new URLSearchParams();
-            p.set('molecule', mol);
-            // Always include all settings so the share URL is fully self-contained.
-            // Viewer.html also reads extra arbitrary params, so additional URL params
-            // (e.g. ?backgroundColor=%23ff0000) work even without a UI control.
-            Object.entries(settings).forEach(([k, v]) => p.set(k, v));
-            return p;
-        }
-
-        function buildViewerUrl(mol, settings) {
-            return 'viewer.html?' + buildParams(mol, settings).toString();
-        }
-
-        function buildShareUrl(mol, settings) {
-            const base = window.location.origin + window.location.pathname;
-            return base + '?' + buildParams(mol, settings).toString();
+        function loadMolecule(molName) {
+            fetch('molecules/' + molName + '.xyz')
+                .then(r => { if (!r.ok) throw new Error('Not found: ' + molName); return r.text(); })
+                .then(text => {
+                    const frames = parseXYZ(text);
+                    if (!frames.length) throw new Error('Parse failed: ' + molName);
+                    viewer.setData(frames);
+                    if (Object.keys(urlSettings).length) viewer.setSettings(urlSettings);
+                })
+                .catch(err => console.error(err));
         }
 
         // ── Navigation ─────────────────────────────────────────────────────
         function showList() {
-            currentMolecule = null;
+            currentMol = null;
             viewList.style.display  = 'flex';
             viewViewer.style.display = 'none';
             molSelect.value = '';
-            history.pushState(null, '', window.location.pathname);
+            history.pushState(null, '', location.pathname);
         }
 
         function selectMolecule(molName) {
-            currentMolecule = molName;
+            currentMol = molName;
             viewList.style.display   = 'none';
-            viewViewer.style.display = 'flex';
+            viewViewer.style.display = 'block';
             molSelect.value = molName;
 
-            const settings = readSettings();
-            const src = buildViewerUrl(molName, settings);
-            if (viewerFrame.getAttribute('src') !== src) {
-                viewerFrame.src = src;
-            }
-
-            history.replaceState(null, '', buildShareUrl(molName, settings));
+            const theme = themeSelect.value;
+            if (!viewer) initViewer(theme);
+            loadMolecule(molName);
+            updateUrl();
         }
 
-        function onSettingChange() {
-            if (currentMolecule) selectMolecule(currentMolecule);
+        function onThemeChange() {
+            initViewer(themeSelect.value);
+            if (currentMol) {
+                loadMolecule(currentMol);
+                updateUrl();
+            }
         }
 
         function toggleFolder(row) {
-            const content = row.nextElementSibling;
-            content.classList.toggle('show');
+            row.nextElementSibling.classList.toggle('show');
             row.classList.toggle('open');
         }
 
-        // ── Share button ───────────────────────────────────────────────────
+        // ── URL management ─────────────────────────────────────────────────
+        function buildShareUrl() {
+            const p = new URLSearchParams();
+            p.set('molecule', currentMol);
+            p.set('theme', themeSelect.value);
+            // Include all settings that were originally in the URL (or set programmatically)
+            Object.entries(urlSettings).forEach(([k, v]) => p.set(k, v));
+            return location.origin + location.pathname + '?' + p.toString();
+        }
+
+        function updateUrl() {
+            if (!currentMol) return;
+            history.replaceState(null, '', buildShareUrl());
+        }
+
         function copyShareUrl() {
-            let url;
-            if (currentMolecule) {
-                url = buildShareUrl(currentMolecule, readSettings());
-            } else {
-                url = window.location.origin + window.location.pathname;
-            }
+            const url = currentMol ? buildShareUrl() : location.origin + location.pathname;
             navigator.clipboard.writeText(url).then(() => {
                 const btn = document.getElementById('shareBtn');
+                const orig = btn.innerHTML;
                 btn.classList.add('copied');
                 btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><polyline points="20 6 9 17 4 12"></polyline></svg> Copied!`;
-                setTimeout(() => {
-                    btn.classList.remove('copied');
-                    btn.innerHTML = `<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none"><path d="M18 9C19.6569 9 21 7.65685 21 6C21 4.34315 19.6569 3 18 3C16.3431 3 15 4.34315 15 6C15 6.12549 15.0077 6.24919 15.0227 6.37063L8.08261 9.84066C7.54305 9.32015 6.80891 9 6 9C4.34315 9 3 10.3431 3 12C3 13.6569 4.34315 15 6 15C6.80891 15 7.54305 14.6798 8.08261 14.1593L15.0227 17.6294C15.0077 17.7508 15 17.8745 15 18C15 19.6569 16.3431 21 18 21C19.6569 21 21 19.6569 21 18C21 16.3431 19.6569 15 18 15C17.1911 15 16.457 15.3202 15.9174 15.8407L8.97733 12.3706C8.99229 12.2492 9 12.1255 9 12C9 11.8745 8.99229 11.7508 8.97733 11.6294L15.9174 8.15934C16.457 8.67985 17.1911 9 18 9Z"/></svg> Share`;
-                }, 2000);
+                setTimeout(() => { btn.classList.remove('copied'); btn.innerHTML = orig; }, 2000);
             });
         }
 
         // ── Route on load ──────────────────────────────────────────────────
         function handleRoute() {
             const params = new URLSearchParams(location.search);
-            const mol    = params.get('molecule');
+            const mol   = params.get('molecule');
+            const theme = params.get('theme') || 'simple';
 
-            // Restore settings from URL if present
-            const restored = {};
-            if (params.has('theme'))         restored.theme         = params.get('theme');
-            if (params.has('style'))         restored.style         = params.get('style');
-            if (params.has('atomSize'))      restored.atomSize      = parseFloat(params.get('atomSize'));
-            if (params.has('bondThreshold')) restored.bondThreshold = parseFloat(params.get('bondThreshold'));
-            if (params.has('showCell'))      restored.showCell      = params.get('showCell') === 'true';
-            if (params.has('showBond'))      restored.showBond      = params.get('showBond') === 'true';
-            if (params.has('showHBond'))     restored.showHBond     = params.get('showHBond') === 'true';
-            if (params.has('showAxis'))      restored.showAxis      = params.get('showAxis') === 'true';
+            themeSelect.value = theme;
 
-            applySettingsToUI({ ...DEFAULTS, ...restored });
+            // Collect non-navigation settings from URL
+            urlSettings = {};
+            FLOAT_PARAMS.forEach(k => { if (params.has(k)) urlSettings[k] = parseFloat(params.get(k)); });
+            BOOL_PARAMS.forEach(k  => { if (params.has(k)) urlSettings[k] = params.get(k) === 'true'; });
+            STR_PARAMS.forEach(k   => { if (params.has(k)) urlSettings[k] = params.get(k); });
 
             if (mol) {
+                initViewer(theme);
                 selectMolecule(mol);
             } else {
                 showList();
